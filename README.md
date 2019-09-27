@@ -5,7 +5,7 @@ Repo for Pokemon Red Recreation in Pico-8, COSC 438 Fall 2019
 
 ## Tasking (Required)
 - Map
-- Pokemon Sprites (ALSO: Pick Starter)
+- Pokemon Sprites (Starter: Squirtle Squad Squirtle)
 - Player Sprites
 - Battle Menu
 - Pokemon Encounters

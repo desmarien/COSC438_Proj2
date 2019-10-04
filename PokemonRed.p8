@@ -8,86 +8,271 @@ function _init()
   palt(0,false)
   squirtle = {
     lvl = 5,
-    curhp = 100,
-    maxhp = 100
+    maxhp = flr(((24*2*5)/100)+5+10),
+    curhp = flr(((24*2*5)/100)+5+10),
+    atk = ((48*2*5)/100)+5,
+    def = ((65*2*5)/100)+5,
+    spatk = ((50*2*5)/100)+5,
+    spdef = ((64*2*5)/100)+5,
+    speed = ((43*2*5)/100)+5,
+    moves = {"tackle","tail whip"}
   }
+
   selectx=55
   selecty=93
   inbattle = false
-  
-  //this is for testing purposes
+
+  --this is for testing purposes
   startbattle()
 end
 
 function _update()
   if inbattle then
-    if btlstage<2 then
+    if btlstage==2 then
+
+      if fight then
+		      if btnp(4) and (selecty == 88 or selecty == 95) then
+          badmove = enemy.moves[flr(rnd(2)+1)]
+          baddamage = 0
+          damage = 0
+          missed = false
+          debuffing = false
+          if badmove == "tackle" or badmove == "gust" then
+            baddamage = (((((2*enemy.lvl)/5)+2)*40*(enemy.atk/(squirtle.def/lowereddef)))/50)+2
+          elseif badmove == "tail whip" then
+            lowereddef += .5
+          elseif badmove == "sand attack" then
+            loweredacc += .5
+          end
+          fight = false
+          fighting = true
+
+          if selecty==88 then
+  		        goodmove = "tackle"
+            if flr(rnd(100)) <= (100/loweredacc) then
+              damage = (((((2*squirtle.lvl)/5)+2)*40*(squirtle.atk/(enemy.def/debuff)))/50)+2
+            else
+              missed = true
+            end
+          end
+		        if selecty==95 then
+  		        goodmove = "tail whip"
+            if flr(rnd(100)) <= (100/loweredacc) then
+              debuff += .5
+              damage = 0
+              debuffing = true
+            else
+              missed = true
+            end
+          end
+		      end
+
+  		    if btnp(2) and selecty>88 then
+  		      selecty -= 7
+  		    elseif btnp(3) and selecty<109 then
+  		      selecty += 7
+  		    end
+
+      elseif fighting then
+        if squirtle.speed >= enemy.spd then
+          if turn == 0 then
+            enemy.curhp -= flr(damage)
+            turn = 1
+          end
+          if screenturn == 2 and turn == 1 then
+            squirtle.curhp -= flr(baddamage)
+            turn = 2
+          end
+        else
+          if turn == 0 then
+            squirtle.curhp -= flr(baddamage)
+            turn = 1
+          end
+          if screenturn == 2 and turn == 1 then
+            enemy.curhp -= flr(damage)
+            turn = 2
+          end
+        end
+        if turn > 1 and screenturn > 3 then
+          selectx=55
+          selecty=93
+          turn = 0
+          screenturn = 0
+          fighting = false
+        end
+        if btnp(4) then
+          screenturn+=1
+        end
+      else
+  		    --select fight option
+  		    if btnp(4) and selectx==55 and selecty==93 and not fight and not fighting then
+  		      fight = true
+  		      selectx = 55
+  		      selecty = 88
+  		    end
+
+  		    if btnp(0) then
+  		      selectx=55
+  		    elseif btnp(1) then
+  		      selectx=91
+  		    elseif btnp(2) then
+  		      selecty=93
+  		    elseif btnp(3) then
+  		      selecty=108
+  		    end
+      end
+
+    else
       if btnp(4) then
         btlstage+=1
       end
     end
-    
-    if btn(0) then
-      selectx=55
-    elseif btn(1) then
-      selectx=91
-    elseif btn(2) then
-      selecty=93
-    elseif btn(3) then
-      selecty=108
-    end
   end
 end
-    
+
 function _draw()
   cls()
   if inbattle then
     map(112,5,0,0,16,16)
     spr(117,selectx,selecty)
-    print(":l"..enemylvl,25,10)
+    print(":l"..enemy.lvl,25,10)
     print("hp:",13,18)
-    rectfill(25,19,25+(37*(enemyhp/enemyhpmax)),20,5)
+    rectfill(25,19,25+(37*(enemy.curhp/enemy.maxhp)),20,5)
     rectfill(73,59,72+(38*(squirtle.curhp/squirtle.maxhp)),60,5)
-    if enemy == 0 then
-        map(124,0,80,10,4,4)
-        print("rattata",12,3,0)
-      else
+    if encounter == 0 then
         map(120,0,80,10,4,4)
         print("pidgey",12,3,0)
-      end
+    else
+        map(124,0,80,10,4,4)
+        print("rattata",12,3,0)
+    end
     if btlstage == 2 then
       map(112,0,12,57,4,3)
       print("squirtle",75,45)
       print(":l5",90,52)
       print(squirtle.curhp.."/ "..squirtle.maxhp,80,65)
-      print("fight",64,95,0)
-      print("pkmn",100,95,0)
-      print("item",64,110,0)
-      print("run",100,110,0)
+      if fight then
+		        print(squirtle.moves[1],64,90,0)
+		        print(squirtle.moves[2],64,98,0)
+		        print("---",64,105,0)
+		        print("---",64,112,0)
+		      else
+		        print("fight",64,95,0)
+		        print("pkmn",100,95,0)
+		        print("item",64,110,0)
+		        print("run",100,110,0)
+		    end
+      if fighting then
+        map(112,21,0,80,16,6)
+        if squirtle.speed >= enemy.spd then
+          if screenturn == 0 then
+            print("squirtle used "..goodmove,10,90)
+          elseif screenturn == 1 then
+            if goodmove == "tail whip" then
+              print(enemy.name.."'s defense was \nlowered!",10,90)
+            elseif missed then
+              print("but it missed!",10,90)
+            else
+              screenturn += 1
+            end
+          elseif screenturn == 2 then
+            print(enemy.name.." used "..badmove,10,90)
+          elseif screenturn == 3 then
+            if badmove == "tail whip" then
+              print("squirtle's defense was \nlowered!",10,90)
+            elseif badmove == "sand attack" then
+              print("squirtle's accuracy was \nlowered!",10,90)
+            else
+              screenturn += 1
+            end
+          end
+        else
+          if screenturn == 0 then
+            print(enemy.name.." used "..badmove,10,90)
+          elseif screenturn == 1 then
+            if badmove == "tail whip" then
+              print("squirtle's defense was \nlowered!",10,90)
+            elseif badmove == "sand attack" then
+              print("squirtle's accuracy was \nlowered!",10,90)
+            else
+              screenturn += 1
+            end
+          elseif screenturn == 2 then
+            print("squirtle used "..goodmove,10,90)
+          elseif screenturn == 3 then
+            if goodmove == "tail whip" then
+              print(enemy.name.."'s defense was \nlowered!",10,90)
+            elseif missed then
+              print("but it missed!",10,90)
+            else
+              screenturn += 1
+             end
+          end
+        end
+      end
     else
       map(112,21,0,80,16,6)
       if btlstage == 0 then
         map(116,0,12,50,4,4)
-        print("a wild "..enemyname.." appeared!",10,90)
+        print("a wild "..enemy.name.." appeared!",10,90)
       elseif btlstage == 1 then
         spr(120,25,70)
         print("go! squirtle!",10,90)
       end
     end
-    
+
   end
 end
 -->8
 function startbattle()
   inbattle = true
-  btlstage = 0 
-  enemyname = "rattata"
-  enemylvl = flr(rnd(4))+3
-  enemyhp = 100
-  enemyhpmax = 100
-  enemy =  flr(rnd(2))
-  if enemy == 1 then 
-    enemyname = "pidgey"
+  fight = false //select fight
+  fighting = false //executing moves
+  turn = 0
+  screenturn = 0
+  debuff = 1
+  loweredacc = 1
+  lowereddef = 1
+  enemymoves = {}
+  enemyatk = ""
+  --[[
+  0 and 1 are start of battle,
+  2 is in battle, 3 is attacking,
+  4 is victory, 5 defeat, 6 is run
+  --]]
+  btlstage = 0
+  encounter =  flr(rnd(2))
+  if encounter == 0 then
+    lvl = flr(rnd(4))+2
+    enemy = {
+      name = "pidgey",
+      lvl = lvl,
+      maxhp = flr(((40*2*lvl)/100)+lvl+10),
+      curhp = flr(((40*2*lvl)/100)+lvl+10),
+      atk = ((45*2*lvl)/100)+5,
+      def = ((40*2*lvl)/100)+5,
+      spatk = ((35*2*lvl)/100)+5,
+      spdef = ((35*2*lvl)/100)+5,
+      spd = ((56*2*lvl)/100)+5,
+      moves = {"gust","gust"}
+    }
+    if enemy.lvl>=5 then
+      enemy.moves[2] = "sand attack"
+    end
+  else
+    lvl = flr(rnd(3))+2
+    enemy = {
+      name = "rattata",
+      lvl = lvl,
+      maxhp = flr(((30*2*lvl)/100)+lvl+10),
+      curhp = flr(((30*2*lvl)/100)+lvl+10),
+      atk = ((56*2*lvl)/100)+5,
+      def = ((35*2*lvl)/100)+5,
+      spatk = ((25*2*lvl)/100)+5,
+      spdef = ((35*2*lvl)/100)+5,
+      spd = ((72*2*lvl)/100)+5,
+      moves = {"tackle","tail whip"}
+    }
   end
 end
 __gfx__

@@ -7,12 +7,12 @@ Repo for Pokemon Red Recreation in Pico-8, COSC 438 Fall 2019
 - [x] Map
 - [x] Pokemon Sprites (Starter: Squirtle Squad Squirtle)
 - [x] Player Battle Sprite
-- [ ] Player movement sprites (IN PROGRESS)
+- [x] Player movement sprites
 - [ ] Battle Sprites Animation
 - [x] Battle Menu (draw)
-- [ ] Battle Menu (programming)
-- [ ] Pokemon Encounters
-- [ ] Player Movement/Collision (IN PROGRESS)
+- [x] Battle Menu (programming)
+- [x] Pokemon Encounters
+- [x] Player Movement/Collision
 - [ ] End Game Menu (After exiting Route 1)
 
 ## Tasking (Extra Credit)

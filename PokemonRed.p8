@@ -7,6 +7,8 @@ __lua__
 function _init()
 	palt(0,false)
 	palt(14,true)
+	gameover = false
+
 	plr = {
 		sp=192,
 		x=64,
@@ -40,9 +42,16 @@ end
 --update and draw
 
 function _update()
-	if inbattle then
+ if gameover then
+   if btnp(4) then
+     _init()
+     reboot()
+   end
+	elseif inbattle then
     if btlstage==2 then
-
+      if enemy.curhp <= 0 or squirtle.curhp <= 0 then
+   	    death = true
+      end
       if fight then
 		      if btnp(4) and (selecty == 88 or selecty == 95) then
           badmove = enemy.moves[flr(rnd(2)+1)]
@@ -106,6 +115,9 @@ function _update()
             turn = 2
           end
         end
+        if squirtle.curhp < 0 then
+          squirtle.curhp = 0
+        end
         if turn > 1 and screenturn > 3 then
           selectx=55
           selecty=93
@@ -114,7 +126,11 @@ function _update()
           fighting = false
         end
         if btnp(4) then
-          screenturn+=1
+          if death then
+            btlstage = 3
+          else
+            screenturn+=1
+          end
         end
       else
   		    --select fight option
@@ -122,6 +138,10 @@ function _update()
   		      fight = true
   		      selectx = 55
   		      selecty = 88
+  		    end
+  		    
+  		    if btnp(4) and selectx==91 and selecty==108 then
+  		      runaway = true
   		    end
 
   		    if btnp(0) then
@@ -140,28 +160,35 @@ function _update()
         btlstage+=1
       end
     end
-   if enemy.curhp <= 0 then
-   	inbattle = false
-   end
-  	if squirtle.curhp <= 0 then
-  		inbattle = false
-  	end
+   
   else
+   if squirtle.curhp <= 0 then
+     gameover = true
+   end
 			plr_update()
 			plr_animate()
 		end
-end
-
+end 
+ 
 function _draw()
- if inbattle then
+ if gameover then
+   cls()
+   map(70,70,0,0,16,16)
+   print("game over.\npress z to restart",40,60,7)
+ elseif inbattle then
+
  			cls()
  			camera(0,0)
     map(112,5,0,0,16,16)
     spr(117,selectx,selecty)
     print(":l"..enemy.lvl,25,10)
     print("hp:",13,18)
-    rectfill(25,19,25+(37*(enemy.curhp/enemy.maxhp)),20,5)
-    rectfill(73,59,72+(38*(squirtle.curhp/squirtle.maxhp)),60,5)
+    if enemy.curhp > 0 then
+      rectfill(25,19,25+(37*(enemy.curhp/enemy.maxhp)),20,5)
+    end
+    if squirtle.curhp > 0 then
+      rectfill(73,59,72+(38*(squirtle.curhp/squirtle.maxhp)),60,5)
+    end
     if encounter == 0 then
         map(120,0,80,10,4,4)
         print("pidgey",12,3,0)
@@ -174,6 +201,10 @@ function _draw()
       print("squirtle",75,45)
       print(":l5",90,52)
       print(squirtle.curhp.."/ "..squirtle.maxhp,80,65)
+      if runaway then
+        inbattle = false
+        runaway = false
+      end
       if fight then
 		        print(squirtle.moves[1],64,90,0)
 		        print(squirtle.moves[2],64,98,0)
@@ -241,6 +272,16 @@ function _draw()
       elseif btlstage == 1 then
         spr(120,25,70)
         print("go! squirtle!",10,90)
+      elseif btlstage == 3 then
+        if enemy.curhp <= 0 then
+          map(112,9,80,10,4,4)
+          map(112,0,12,57,4,3)
+          print("the wild "..enemy.name.. " was \ndefeated!",10,90)
+        elseif squirtle.curhp <= 0 then
+          print("squirtle fainted!",10,90)
+        end
+      elseif btlstage == 4 then
+        inbattle = false
       end
     end
 
@@ -250,6 +291,7 @@ function _draw()
  		map(0,0,0,0,16,66)
  		spr(plr.sp,plr.x,plr.y)
  	end
+
 end
 -->8
 --collisions
@@ -313,6 +355,7 @@ function plr_update()
 			end
 		end
 
+
 	if btn(1) then
 		plr.x += 1
 		plr.move = "right"
@@ -322,6 +365,7 @@ function plr_update()
 			end
 		end
 
+
 	if btn(2) then
 		plr.y -= 1
 		plr.move = "up"
@@ -330,6 +374,7 @@ function plr_update()
 			plr.y += 1
 			end
 		end
+
 
 	if btn(3) then
 		plr.y += 1
@@ -348,6 +393,7 @@ end
 function plr_animate()
 
 	if plr.move=="up" then
+
 	if plr.moving then
 		if time()-plr.anim>.2 then
 			plr.anim=time()
@@ -361,6 +407,7 @@ function plr_animate()
 			end
 		end
 	end
+
 	end
 
 	if plr.move == "down" then
@@ -377,6 +424,7 @@ function plr_animate()
 			end
 		end
 	end
+
 	end
 
 	if plr.move == "left" then
@@ -431,11 +479,15 @@ end
 --battle
 function startbattle()
   inbattle = true
+  runaway = false
   fight = false //select fight
   fighting = false //executing moves
+  selectx=55
+  selecty=93
   turn = 0
   screenturn = 0
   debuff = 1
+  death = false
   loweredacc = 1
   lowereddef = 1
   enemymoves = {}
